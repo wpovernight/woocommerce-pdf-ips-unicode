@@ -106,7 +106,7 @@ final class WPO_IPS_Unicode_Font_Pack {
 					'id'          => self::OPTION_KEY,
 					'default'     => 'noto',
 					'options'     => apply_filters(
-						'wpo_wcpdf_unicode_font_options',
+						'wpo_ips_unicode_font_options',
 						array(
 							'noto'       => __( 'Noto Sans', 'woocommerce-pdf-ips-unicode' ),
 							'dejavu'     => __( 'DejaVu Sans', 'woocommerce-pdf-ips-unicode' ),
@@ -275,7 +275,7 @@ final class WPO_IPS_Unicode_Font_Pack {
 			),
 		);
 
-		return apply_filters( 'wpo_wcpdf_unicode_font_registry', $fonts, $document_type, $document );
+		return apply_filters( 'wpo_ips_unicode_font_registry', $fonts, $document_type, $document );
 	}
 }
 
