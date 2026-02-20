@@ -108,9 +108,9 @@ final class WPO_IPS_Unicode_Font_Pack {
 					'options'     => apply_filters(
 						'wpo_ips_unicode_font_options',
 						array(
-							'noto'       => __( 'Noto Sans', 'woocommerce-pdf-ips-unicode' ),
-							'dejavu'     => __( 'DejaVu Sans', 'woocommerce-pdf-ips-unicode' ),
-							'liberation' => __( 'Liberation Sans', 'woocommerce-pdf-ips-unicode' ),
+							'noto'       => 'Noto Sans',
+							'dejavu'     => 'DejaVu Sans',
+							'liberation' => 'Liberation Sans',
 						)
 					),
 					'description' => __( 'Select an alternative font to improve character support for certain languages/scripts.', 'woocommerce-pdf-ips-unicode' ),
