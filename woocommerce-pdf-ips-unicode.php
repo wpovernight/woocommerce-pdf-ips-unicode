@@ -271,10 +271,60 @@ final class WPO_IPS_Unicode_Font_Pack {
 				),
 			),
 			'droid_fallback' => array(
-				'label'  => 'Droid Sans Fallback (Full) (CJK)',
+				'label'  => 'Droid Sans Fallback (Full)',
 				'family' => 'WPO Unicode Droid Fallback',
 				'files'  => array(
 					'regular' => 'DroidSansFallbackFull.ttf', // https://github.com/aosp-mirror/platform_frameworks_base/blob/master/data/fonts/DroidSansFallbackFull.ttf
+				),
+			),
+			'noto_cjk_hk' => array(
+				'label'  => 'Noto Sans CJK (Hong Kong)',
+				'family' => 'WPO Unicode Noto Sans CJK HK',
+				'files'  => array(
+					'regular'     => 'NotoSansCJKhk-Regular.ttf',
+					'bold'        => 'NotoSansCJKhk-Bold.ttf',
+					'italic'      => 'NotoSansCJKhk-Italic.ttf',
+					'bold_italic' => 'NotoSansCJKhk-BoldItalic.ttf',
+				),
+			),
+			'noto_cjk_jp' => array(
+				'label'  => 'Noto Sans CJK (Japanese)',
+				'family' => 'WPO Unicode Noto Sans CJK JP',
+				'files'  => array(
+					'regular'     => 'NotoSansCJKjp-Regular.ttf',
+					'bold'        => 'NotoSansCJKjp-Bold.ttf',
+					'italic'      => 'NotoSansCJKjp-Italic.ttf',
+					'bold_italic' => 'NotoSansCJKjp-BoldItalic.ttf',
+				),
+			),
+			'noto_cjk_kr' => array(
+				'label'  => 'Noto Sans CJK (Korean)',
+				'family' => 'WPO Unicode Noto Sans CJK KR',
+				'files'  => array(
+					'regular'     => 'NotoSansCJKkr-Regular.ttf',
+					'bold'        => 'NotoSansCJKkr-Bold.ttf',
+					'italic'      => 'NotoSansCJKkr-Italic.ttf',
+					'bold_italic' => 'NotoSansCJKkr-BoldItalic.ttf',
+				),
+			),
+			'noto_cjk_sc' => array(
+				'label'  => 'Noto Sans CJK (Simplified Chinese)',
+				'family' => 'WPO Unicode Noto Sans CJK SC',
+				'files'  => array(
+					'regular'     => 'NotoSansCJKsc-Regular.ttf',
+					'bold'        => 'NotoSansCJKsc-Bold.ttf',
+					'italic'      => 'NotoSansCJKsc-Italic.ttf',
+					'bold_italic' => 'NotoSansCJKsc-BoldItalic.ttf',
+				),
+			),
+			'noto_cjk_tc' => array(
+				'label'  => 'Noto Sans CJK (Traditional Chinese)',
+				'family' => 'WPO Unicode Noto Sans CJK TC',
+				'files'  => array(
+					'regular'     => 'NotoSansCJKtc-Regular.ttf',
+					'bold'        => 'NotoSansCJKtc-Bold.ttf',
+					'italic'      => 'NotoSansCJKtc-Italic.ttf',
+					'bold_italic' => 'NotoSansCJKtc-BoldItalic.ttf',
 				),
 			),
 		);
