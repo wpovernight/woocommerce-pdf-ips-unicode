@@ -277,6 +277,8 @@ final class WPO_IPS_Unicode_Font_Pack {
 					'regular' => 'DroidSansFallbackFull.ttf', // https://github.com/aosp-mirror/platform_frameworks_base/blob/master/data/fonts/DroidSansFallbackFull.ttf
 				),
 			),
+			
+			// https://github.com/life888888/cjk-fonts-ttf?tab=readme-ov-file#notosans-cjk
 			'noto_cjk_hk' => array(
 				'label'  => 'Noto Sans CJK (Hong Kong)',
 				'family' => 'WPO Unicode Noto Sans CJK HK',
