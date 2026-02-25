@@ -104,15 +104,8 @@ final class WPO_IPS_Unicode_Font_Pack {
 				'args'     => array(
 					'option_name' => $option_name,
 					'id'          => self::OPTION_KEY,
-					'default'     => 'noto',
-					'options'     => apply_filters(
-						'wpo_ips_unicode_font_options',
-						array(
-							'noto'       => 'Noto Sans',
-							'dejavu'     => 'DejaVu Sans',
-							'liberation' => 'Liberation Sans',
-						)
-					),
+					'default'     => 'droid_fallback',
+					'options'     => $this->get_font_options(),
 					'description' => __( 'Select an alternative font to improve character support for certain languages/scripts.', 'woocommerce-pdf-ips-unicode' ),
 				),
 			),
@@ -247,6 +240,7 @@ final class WPO_IPS_Unicode_Font_Pack {
 	private function get_font_registry( string $document_type, $document ): array {
 		$fonts = array(
 			'noto' => array(
+				'label'  => 'Noto Sans',
 				'family' => 'WPO Unicode Noto',
 				'files'  => array(
 					'regular'     => 'NotoSans-Regular.ttf',
@@ -256,6 +250,7 @@ final class WPO_IPS_Unicode_Font_Pack {
 				),
 			),
 			'dejavu' => array(
+				'label'  => 'DejaVu Sans',
 				'family' => 'WPO Unicode DejaVu',
 				'files'  => array(
 					'regular'     => 'DejaVuSans.ttf',
@@ -265,6 +260,7 @@ final class WPO_IPS_Unicode_Font_Pack {
 				),
 			),
 			'liberation' => array(
+				'label'  => 'Liberation Sans',
 				'family' => 'WPO Unicode Liberation',
 				'files'  => array(
 					'regular'     => 'LiberationSans-Regular.ttf',
@@ -273,9 +269,37 @@ final class WPO_IPS_Unicode_Font_Pack {
 					'bold_italic' => 'LiberationSans-BoldItalic.ttf',
 				),
 			),
+			'droid_fallback' => array(
+				'label'  => 'Droid Sans Fallback (Full) (CJK)',
+				'family' => 'WPO Unicode Droid Fallback',
+				'files'  => array(
+					'regular' => 'DroidSansFallbackFull.ttf', // https://github.com/aosp-mirror/platform_frameworks_base/blob/master/data/fonts/DroidSansFallbackFull.ttf
+				),
+			),
 		);
 
 		return apply_filters( 'wpo_ips_unicode_font_registry', $fonts, $document_type, $document );
+	}
+	
+	/**
+	 * Get the Unicode font select options derived from the font registry.
+	 *
+	 * @param string $document_type
+	 * @param object $document
+	 * @return array
+	 */
+	private function get_font_options( string $document_type = '', $document = null ): array {
+		$options = array();
+		$fonts   = $this->get_font_registry( $document_type, $document );
+
+		foreach ( $fonts as $key => $font ) {
+			if ( empty( $font['label'] ) ) {
+				continue;
+			}
+			$options[ $key ] = $font['label'];
+		}
+
+		return apply_filters( 'wpo_ips_unicode_font_options', $options, $document_type, $document );
 	}
 }
 
