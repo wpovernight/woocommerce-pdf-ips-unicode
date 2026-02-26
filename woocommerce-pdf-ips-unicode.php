@@ -177,6 +177,15 @@ final class WPO_IPS_Unicode_Font_Pack {
 		$family = $fonts[ $selected ]['family'];
 		$files  = $fonts[ $selected ]['files'];
 
+		// Optional fallback for Droid Sans Fallback (Full) to support Korean glyphs.
+		$fallback_family = '';
+		$fallback_files  = array();
+
+		if ( 'droid_fallback' === $selected && ! empty( $fonts['noto_cjk_kr'] ) ) {
+			$fallback_family = $fonts['noto_cjk_kr']['family'] ?? '';
+			$fallback_files  = $fonts['noto_cjk_kr']['files']  ?? array();
+		}
+
 		?>
 		/* Unicode font: <?php echo esc_html( $selected ); ?> */
 
@@ -214,9 +223,33 @@ final class WPO_IPS_Unicode_Font_Pack {
 		}
 		<?php endif; ?>
 
+		<?php if ( ! empty( $fallback_family ) && ! empty( $fallback_files['regular'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $fallback_family ); ?>';
+			font-style: normal;
+			font-weight: 400;
+			src: url('<?php echo esc_url( $base_url . $fallback_files['regular'] ); ?>') format('truetype');
+		}
+
+		<?php if ( ! empty( $fallback_files['bold'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $fallback_family ); ?>';
+			font-style: normal;
+			font-weight: 700;
+			src: url('<?php echo esc_url( $base_url . $fallback_files['bold'] ); ?>') format('truetype');
+		}
+		<?php endif; ?>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $fallback_family ) ) : ?>
+		body {
+			font-family: '<?php echo esc_attr( $family ); ?>', '<?php echo esc_attr( $fallback_family ); ?>', sans-serif !important;
+		}
+		<?php else : ?>
 		body {
 			font-family: '<?php echo esc_attr( $family ); ?>', sans-serif !important;
 		}
+		<?php endif; ?>
 		<?php
 	}
 
