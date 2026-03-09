@@ -4,7 +4,7 @@
  * Requires Plugins: woocommerce-pdf-invoices-packing-slips
  * Plugin URI:       https://github.com/wpovernight/woocommerce-pdf-ips-unicode
  * Description:      Adds Unicode-capable fonts to PDF Invoices & Packing Slips for WooCommerce to improve character support across multiple languages.
- * Version:          2.0.0
+ * Version:          2.0.0-pr1.1
  * Update URI:       https://github.com/wpovernight/woocommerce-pdf-ips-unicode
  * Author:           WP Overnight
  * Author URI:       https://wpovernight.com/
