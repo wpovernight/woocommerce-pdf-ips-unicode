@@ -1,53 +1,384 @@
 <?php
 /**
- * Plugin Name: PDF Invoices & Packing Slips for WooCommerce - Unicode Language Pack
- * Plugin URI:  http://www.wpovernight.com
- * Description: Adds the Arial Unicode MS font to PDF Invoices & Packing Slips for WooCommerce for extended character support
- * Version:     1.0.1
- * Author:      WP Overnight
- * Author URI:  http://www.wpovernight.com
- * License:     GPLv2 or later
- * License URI: http://www.opensource.org/licenses/gpl-license.php
+ * Plugin Name:      PDF Invoices & Packing Slips for WooCommerce - Unicode Font Pack
+ * Requires Plugins: woocommerce-pdf-invoices-packing-slips
+ * Plugin URI:       https://github.com/wpovernight/woocommerce-pdf-ips-unicode
+ * Description:      Adds Unicode-capable fonts to PDF Invoices & Packing Slips for WooCommerce to improve character support across multiple languages.
+ * Version:          2.0.0-pr1.1
+ * Update URI:       https://github.com/wpovernight/woocommerce-pdf-ips-unicode
+ * Author:           WP Overnight
+ * Author URI:       https://wpovernight.com/
+ * License:          GPLv3
+ * License URI:      https://opensource.org/licenses/gpl-license.php
+ * Text Domain:      woocommerce-pdf-ips-unicode
+ * Domain Path:      /languages
  */
 
-function wpo_wcpdf_arial_unicode( $document_type, $document ) {
-	?>
-		/* Load font */
-		@font-face {
-			font-family: 'Arial Unicode MS';
-			font-style: normal;
-			font-weight: normal;
-			src: local('Arial Unicode MS'), local('Arial Unicode MS'), url('<?php echo dirname(__FILE__); ?>/fonts/Arial Unicode.ttf') format('truetype');
-		}
-		@font-face {
-			font-family: 'Arial Unicode MS';
-			font-style: normal;
-			font-weight: bold;
-			src: local('Arial Unicode MS Bold'), local('Arial Unicode MS-Bold'), url('<?php echo dirname(__FILE__); ?>/fonts/Arial Unicode.ttf') format('truetype');
-		}
-		@font-face {
-			font-family: 'Arial Unicode MS';
-			font-style: italic;
-			font-weight: normal;
-			src: local('Arial Unicode MS Italic'), local('Arial Unicode MS-Italic'), url('<?php echo dirname(__FILE__); ?>/fonts/Arial Unicode.ttf') format('truetype');
-		}
-		@font-face {
-			font-family: 'Arial Unicode MS';
-			font-style: italic;
-			font-weight: bold;
-			src: local('Arial Unicode MS Bold Italic'), local('Arial Unicode MS-BoldItalic'), url('<?php echo dirname(__FILE__); ?>/fonts/Arial Unicode.ttf') format('truetype');
-		}
-
-		/* Override font */
-		body {
-			font-family: 'Arial Unicode MS' !important;
-		}
-	<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-add_action( 'wpo_wcpdf_custom_styles', 'wpo_wcpdf_arial_unicode', 10, 2 );
+if ( ! class_exists( 'WPO_IPS_Unicode_Font_Pack' ) ) :
+	
+$plugin_path           = plugin_dir_path( __FILE__ );
+$plugin_directory_name = basename( $plugin_path );
+$plugin_file           = $plugin_directory_name . '/woocommerce-pdf-ips-unicode.php';
+$github_updater_file   = $plugin_path . 'github-updater/GitHubUpdater.php';
 
-add_filter( 'wpo_wcpdf_dompdf_options', function( $options ) {
-	$options['isFontSubsettingEnabled'] = true;
-	return $options;
-}, 20, 1 );
+if ( ! class_exists( '\\WPO\\GitHubUpdater\\GitHubUpdater' ) && file_exists( $github_updater_file ) ) {
+	require_once $github_updater_file;
+}
+
+if ( class_exists( '\\WPO\\GitHubUpdater\\GitHubUpdater' ) ) {
+	$gitHubUpdater = new \WPO\GitHubUpdater\GitHubUpdater( $plugin_file );
+	$gitHubUpdater->setChangelog( 'CHANGELOG.md' );
+	$gitHubUpdater->add();
+}
+
+final class WPO_IPS_Unicode_Font_Pack {
+
+	public const OPTION_KEY = 'unicode_font';
+
+	private static ?self $instance = null;
+
+	/**
+	 * Get the singleton instance of the plugin class.
+	 *
+	 * @return self
+	 */
+	public static function instance(): self {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Private constructor to prevent direct instantiation.
+	 */
+	private function __construct() {
+		add_action( 'init', array( $this, 'load_textdomain' ) );
+
+		add_filter( 'wpo_wcpdf_settings_fields_general', array( $this, 'add_setting_field' ), 10, 5 );
+		add_filter( 'wpo_wcpdf_general_settings_categories', array( $this, 'add_setting_to_category' ), 10, 2 );
+
+		add_action( 'wpo_wcpdf_custom_styles', array( $this, 'output_custom_styles' ), 10, 2 );
+
+		add_filter( 'wpo_wcpdf_dompdf_options', array( $this, 'enable_dompdf_font_subsetting' ), 20, 1 );
+	}
+
+	/**
+	 * Load the plugin's text domain for translations.
+	 * 
+	 * @return void
+	 */
+	public function load_textdomain(): void {
+		load_plugin_textdomain(
+			'woocommerce-pdf-ips-unicode',
+			false,
+			dirname( plugin_basename( __FILE__ ) ) . '/languages'
+		);
+	}
+
+	/**
+	 * Add the Unicode font setting field to the general settings.
+	 * 
+	 * @param array  $settings_fields
+	 * @param string $page
+	 * @param string $option_group
+	 * @param string $option_name
+	 * @param object $general_settings
+	 * @return array
+	 */
+	public function add_setting_field( array $settings_fields, string $page, string $option_group, string $option_name, $general_settings ): array {
+		if ( ! function_exists( 'WPO_WCPDF' ) || ! class_exists( '\WPO\IPS\Settings' ) ) {
+			return $settings_fields;
+		}
+
+		$insert_settings = array(
+			array(
+				'type'     => 'setting',
+				'id'       => self::OPTION_KEY,
+				'title'    => __( 'Unicode font', 'woocommerce-pdf-ips-unicode' ),
+				'callback' => 'select',
+				'section'  => 'general_settings',
+				'args'     => array(
+					'option_name' => $option_name,
+					'id'          => self::OPTION_KEY,
+					'default'     => 'droid_fallback',
+					'options'     => $this->get_font_options(),
+					'description' => __( 'Select an alternative font to improve character support for certain languages/scripts.', 'woocommerce-pdf-ips-unicode' ),
+				),
+			),
+		);
+
+		return \WPO\IPS\Settings::instance()->move_setting_after_id(
+			$settings_fields,
+			$insert_settings,
+			'font_subsetting'
+		);
+	}
+
+	/**
+	 * Add the Unicode font setting to the "Advanced Formatting" category.
+	 * 
+	 * @param array  $settings_categories
+	 * @param object $settings_general
+	 * @return array
+	 */
+	public function add_setting_to_category( array $settings_categories, $settings_general ): array {
+		if ( empty( $settings_categories['advanced_formatting']['members'] ) || ! is_array( $settings_categories['advanced_formatting']['members'] ) ) {
+			return $settings_categories;
+		}
+
+		$members = $settings_categories['advanced_formatting']['members'];
+
+		if ( in_array( self::OPTION_KEY, $members, true ) ) {
+			return $settings_categories;
+		}
+
+		$pos = array_search( 'font_subsetting', $members, true );
+
+		if ( false !== $pos ) {
+			array_splice( $members, $pos + 1, 0, array( self::OPTION_KEY ) );
+		} else {
+			$members[] = self::OPTION_KEY;
+		}
+
+		$settings_categories['advanced_formatting']['members'] = $members;
+
+		return $settings_categories;
+	}
+
+	/**
+	 * Output custom CSS styles to include the selected Unicode font in the PDF.
+	 * 
+	 * @param string $document_type
+	 * @param object $document
+	 * @return void
+	 */
+	public function output_custom_styles( string $document_type, $document ): void {
+		$base_url = plugin_dir_url( __FILE__ ) . 'fonts/';
+
+		$general_settings = get_option( 'wpo_wcpdf_settings_general', array() );
+		$selected         = isset( $general_settings[ self::OPTION_KEY ] ) && is_string( $general_settings[ self::OPTION_KEY ] )
+			? $general_settings[ self::OPTION_KEY ]
+			: 'noto';
+
+		$fonts = $this->get_font_registry( $document_type, $document );
+
+		if ( empty( $fonts[ $selected ] ) ) {
+			$selected = 'noto';
+		}
+		if ( empty( $fonts[ $selected ]['files']['regular'] ) ) {
+			return;
+		}
+
+		$family = $fonts[ $selected ]['family'];
+		$files  = $fonts[ $selected ]['files'];
+
+		// Optional fallback for Droid Sans Fallback (Full) to support Korean glyphs.
+		$fallback_family = '';
+		$fallback_files  = array();
+
+		if ( 'droid_fallback' === $selected && ! empty( $fonts['noto_cjk_kr'] ) ) {
+			$fallback_family = $fonts['noto_cjk_kr']['family'] ?? '';
+			$fallback_files  = $fonts['noto_cjk_kr']['files']  ?? array();
+		}
+
+		?>
+		/* Unicode font: <?php echo esc_html( $selected ); ?> */
+
+		@font-face {
+			font-family: '<?php echo esc_attr( $family ); ?>';
+			font-style: normal;
+			font-weight: 400;
+			src: url('<?php echo esc_url( $base_url . $files['regular'] ); ?>') format('truetype');
+		}
+
+		<?php if ( ! empty( $files['bold'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $family ); ?>';
+			font-style: normal;
+			font-weight: 700;
+			src: url('<?php echo esc_url( $base_url . $files['bold'] ); ?>') format('truetype');
+		}
+		<?php endif; ?>
+
+		<?php if ( ! empty( $files['italic'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $family ); ?>';
+			font-style: italic;
+			font-weight: 400;
+			src: url('<?php echo esc_url( $base_url . $files['italic'] ); ?>') format('truetype');
+		}
+		<?php endif; ?>
+
+		<?php if ( ! empty( $files['bold_italic'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $family ); ?>';
+			font-style: italic;
+			font-weight: 700;
+			src: url('<?php echo esc_url( $base_url . $files['bold_italic'] ); ?>') format('truetype');
+		}
+		<?php endif; ?>
+
+		<?php if ( ! empty( $fallback_family ) && ! empty( $fallback_files['regular'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $fallback_family ); ?>';
+			font-style: normal;
+			font-weight: 400;
+			src: url('<?php echo esc_url( $base_url . $fallback_files['regular'] ); ?>') format('truetype');
+		}
+
+		<?php if ( ! empty( $fallback_files['bold'] ) ) : ?>
+		@font-face {
+			font-family: '<?php echo esc_attr( $fallback_family ); ?>';
+			font-style: normal;
+			font-weight: 700;
+			src: url('<?php echo esc_url( $base_url . $fallback_files['bold'] ); ?>') format('truetype');
+		}
+		<?php endif; ?>
+		<?php endif; ?>
+
+		<?php if ( ! empty( $fallback_family ) ) : ?>
+		body {
+			font-family: '<?php echo esc_attr( $family ); ?>', '<?php echo esc_attr( $fallback_family ); ?>', sans-serif !important;
+		}
+		<?php else : ?>
+		body {
+			font-family: '<?php echo esc_attr( $family ); ?>', sans-serif !important;
+		}
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Enable font subsetting in Dompdf to reduce PDF file size when using Unicode fonts.
+	 * 
+	 * @param array $options
+	 * @return array
+	 */
+	public function enable_dompdf_font_subsetting( array $options ): array {
+		$options['isFontSubsettingEnabled'] = true;
+		return $options;
+	}
+
+	/**
+	 * Get the registry of available Unicode fonts.
+	 * 
+	 * @param string $document_type
+	 * @param object $document
+	 * @return array
+	 */
+	private function get_font_registry( string $document_type, $document ): array {
+		$fonts = array(
+			'noto' => array(
+				'label'  => 'Noto Sans',
+				'family' => 'WPO Unicode Noto',
+				'files'  => array(
+					'regular'     => 'NotoSans-Regular.ttf',
+					'bold'        => 'NotoSans-Bold.ttf',
+					'italic'      => 'NotoSans-Italic.ttf',
+					'bold_italic' => 'NotoSans-BoldItalic.ttf',
+				),
+			),
+			'dejavu' => array(
+				'label'  => 'DejaVu Sans',
+				'family' => 'WPO Unicode DejaVu',
+				'files'  => array(
+					'regular'     => 'DejaVuSans.ttf',
+					'bold'        => 'DejaVuSans-Bold.ttf',
+					'italic'      => 'DejaVuSans-Oblique.ttf',
+					'bold_italic' => 'DejaVuSans-BoldOblique.ttf',
+				),
+			),
+			'liberation' => array(
+				'label'  => 'Liberation Sans',
+				'family' => 'WPO Unicode Liberation',
+				'files'  => array(
+					'regular'     => 'LiberationSans-Regular.ttf',
+					'bold'        => 'LiberationSans-Bold.ttf',
+					'italic'      => 'LiberationSans-Italic.ttf',
+					'bold_italic' => 'LiberationSans-BoldItalic.ttf',
+				),
+			),
+			'droid_fallback' => array(
+				'label'  => 'Droid Sans Fallback (Full)',
+				'family' => 'WPO Unicode Droid Fallback',
+				'files'  => array(
+					'regular' => 'DroidSansFallbackFull.ttf', // https://github.com/aosp-mirror/platform_frameworks_base/blob/master/data/fonts/DroidSansFallbackFull.ttf
+				),
+			),
+			
+			// https://github.com/life888888/cjk-fonts-ttf?tab=readme-ov-file#notosans-cjk
+			'noto_cjk_hk' => array(
+				'label'  => 'Noto Sans CJK (Hong Kong)',
+				'family' => 'WPO Unicode Noto Sans CJK HK',
+				'files'  => array(
+					'regular' => 'NotoSansCJKhk-Regular.ttf',
+					'bold'    => 'NotoSansCJKhk-Bold.ttf',
+				),
+			),
+			'noto_cjk_jp' => array(
+				'label'  => 'Noto Sans CJK (Japanese)',
+				'family' => 'WPO Unicode Noto Sans CJK JP',
+				'files'  => array(
+					'regular' => 'NotoSansCJKjp-Regular.ttf',
+					'bold'    => 'NotoSansCJKjp-Bold.ttf',
+				),
+			),
+			'noto_cjk_kr' => array(
+				'label'  => 'Noto Sans CJK (Korean)',
+				'family' => 'WPO Unicode Noto Sans CJK KR',
+				'files'  => array(
+					'regular' => 'NotoSansCJKkr-Regular.ttf',
+					'bold'    => 'NotoSansCJKkr-Bold.ttf',
+				),
+			),
+			'noto_cjk_sc' => array(
+				'label'  => 'Noto Sans CJK (Simplified Chinese)',
+				'family' => 'WPO Unicode Noto Sans CJK SC',
+				'files'  => array(
+					'regular' => 'NotoSansCJKsc-Regular.ttf',
+					'bold'    => 'NotoSansCJKsc-Bold.ttf',
+				),
+			),
+			'noto_cjk_tc' => array(
+				'label'  => 'Noto Sans CJK (Traditional Chinese)',
+				'family' => 'WPO Unicode Noto Sans CJK TC',
+				'files'  => array(
+					'regular' => 'NotoSansCJKtc-Regular.ttf',
+					'bold'    => 'NotoSansCJKtc-Bold.ttf',
+				),
+			),
+		);
+
+		return apply_filters( 'wpo_ips_unicode_font_registry', $fonts, $document_type, $document );
+	}
+	
+	/**
+	 * Get the Unicode font select options derived from the font registry.
+	 *
+	 * @param string $document_type
+	 * @param object $document
+	 * @return array
+	 */
+	private function get_font_options( string $document_type = '', $document = null ): array {
+		$options = array();
+		$fonts   = $this->get_font_registry( $document_type, $document );
+
+		foreach ( $fonts as $key => $font ) {
+			if ( empty( $font['label'] ) ) {
+				continue;
+			}
+			$options[ $key ] = $font['label'];
+		}
+
+		return apply_filters( 'wpo_ips_unicode_font_options', $options, $document_type, $document );
+	}
+}
+
+WPO_IPS_Unicode_Font_Pack::instance();
+
+endif;
